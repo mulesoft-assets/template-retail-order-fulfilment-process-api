@@ -16,7 +16,7 @@ http://www.mulesoft.org/schema/mule/retail-notifications-system-api http://www.m
 		<foreach doc:name="For Each OrderItem" doc:id="2e9cb2eb-4055-495d-be36-7729ee26e503" collection="#[vars.inputOrder.orderItems]">
 			<set-variable value="#[payload]" doc:name="Set Variable currentItem" doc:id="d59fc4a4-2ec0-454d-957f-2f41668b4067" variableName="currentItem"/>
 			<retail-product-availability-process-api:get-availabilities-by-location-id doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
-			<ee:transform doc:name="check availability, calculate subtotal, totalTax, set listPartners, warehouseShipping" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
+			<ee:transform doc:name="check availability, calculate subtotal, taxPrce, set listPartners, shippingPrice" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
@@ -45,7 +45,7 @@ vars.taxPrice + payload.tax]]></ee:set-variable>
 		</ee:transform>
 			<validation:is-true doc:name="All items must be available" doc:id="02fb2337-2574-479b-8354-aab750e8de61" config-ref="Validation_Config" expression="#[payload]" message="Product is not available" />
 		</foreach>
-		<ee:transform doc:name="Calculation total shipping" doc:id="5f0bebe0-ab03-4a38-8d68-3fbdba0967db">
+		<ee:transform doc:name="Calculation shippingPrice" doc:id="5f0bebe0-ab03-4a38-8d68-3fbdba0967db">
 					<ee:message>
 					</ee:message>
 			<ee:variables >
@@ -200,7 +200,7 @@ output application/json
 		<retail-orders-system-api:update-statuses-by-order-id doc:name="Update statuses by order id" doc:id="9e5948a8-f305-4e5b-a2f4-41a5803dc5b0" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.order.identifier]"/>
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
-		<ee:transform doc:name="Prepare email requeest" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
+		<ee:transform doc:name="Prepare email request" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json

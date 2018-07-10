@@ -16,7 +16,7 @@ http://www.mulesoft.org/schema/mule/retail-notifications-system-api http://www.m
 		<foreach doc:name="For Each OrderItem" doc:id="2e9cb2eb-4055-495d-be36-7729ee26e503" collection="#[vars.inputOrder.orderItems]">
 			<set-variable value="#[payload]" doc:name="Set Variable currentItem" doc:id="d59fc4a4-2ec0-454d-957f-2f41668b4067" variableName="currentItem"/>
 			<retail-product-availability-process-api:get-availabilities-by-location-id doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
-			<ee:transform doc:name="check availability, calculate subtotal, taxPrce, set listPartners, shippingPrice" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
+			<ee:transform doc:name="check availability, calculate subtotal, taxPrice, set listPartners, shippingPrice" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java

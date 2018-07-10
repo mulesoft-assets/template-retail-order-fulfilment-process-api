@@ -85,6 +85,8 @@ In order to use this Mule Anypoint Template you need to configure properties (Cr
 Detailed list with examples:
 ### Application properties
 
+http.port `8081`
+
 product-availability-process-api.host `availability.example.com`
 product-availability-process-api.port `80`
 product-availability-process-api.basePath `/api`

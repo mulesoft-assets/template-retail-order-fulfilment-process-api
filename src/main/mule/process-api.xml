@@ -156,7 +156,9 @@ payload]]></ee:set-variable>
 			<when expression="#[vars.order != null]" >
 				<flow-ref doc:name="processPayment" doc:id="505f7fdd-397e-4062-9692-5fb417350434" name="processPayment"/>
 				<flow-ref doc:name="updateOrderStatus" doc:id="70128205-fa23-43c4-b05d-326d57821bac" name="updateOrderStatus"/>
-				<flow-ref doc:name="sendNotificationEmail" doc:id="c2833e89-d4b3-4736-b727-968c5ddbc50b" name="sendNotificationEmail"/>
+				<async doc:name="Async" doc:id="7ad01a13-c8c8-49e4-b9a5-12fd3be1efea" >
+					<flow-ref doc:name="sendNotificationEmail" doc:id="ac2f593c-8484-4857-b509-3f7d9a807c31" name="sendNotificationEmail"/>
+				</async>
 				<ee:transform doc:name="Successful Response" doc:id="c3df3db8-2065-45f6-a6ab-5211481d107f" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0

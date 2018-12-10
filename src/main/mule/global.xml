@@ -16,6 +16,8 @@ http://www.mulesoft.org/schema/mule/retail-payment-process-api http://www.muleso
 http://www.mulesoft.org/schema/mule/retail-partners-system-api http://www.mulesoft.org/schema/mule/retail-partners-system-api/current/mule-retail-partners-system-api.xsd
 http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api/current/mule-retail-salesforce-customer-system-api.xsd">
 
+	<global-property doc:name="Global Property" doc:id="84bbf3f2-0e65-47e4-a168-5443320656e1" name="mule.env" value="dev" />
+	
 	<http:listener-config name="retail_order_fulfilment_process_api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${http.port}" />
     </http:listener-config>
@@ -27,7 +29,6 @@ http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api http:/
 		property_protocol="${product-availability-process-api.protocol}" />
 	<configuration-properties doc:name="Configuration properties" doc:id="922d7e5a-d00a-4fdd-82da-eb30b79b5f47" file="common.properties" />
 	<configuration-properties doc:name="Configuration properties" doc:id="bb128d21-acad-4087-a5b8-b9df68b1a62b" file="mule.${mule.env}.properties" />
-	<configuration-properties doc:name="Configuration properties" doc:id="00521e3e-36d9-4a94-82ea-52569ad18aaf" file="mule-artifact.properties" />
 	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="fcc517fe-29a1-4e38-b91f-002d32de6031" />
 	<retail-orders-system-api:config name="Retail_Orders_System_API_Config" doc:name="Retail Orders System API Config" doc:id="8fee2144-f7ed-42b4-a3ed-e4108e8f3fb3" 
 		property_host="${orders-system-api.host}" 

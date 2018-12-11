@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/retail-notifications-system-api http://www.m
 <flow name="checkAvailability" doc:id="3e36bf92-b10d-4ede-9f91-0d883c94038c" >
 		<foreach doc:name="For Each OrderItem" doc:id="2e9cb2eb-4055-495d-be36-7729ee26e503" collection="#[vars.inputOrder.orderItems]">
 			<set-variable value="#[payload]" doc:name="Set Variable currentItem" doc:id="d59fc4a4-2ec0-454d-957f-2f41668b4067" variableName="currentItem"/>
-			<retail-product-availability-process-api:get-availabilities-by-location-id doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
+			<retail-product-availability-process-api:retrieve-availability-for-location doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
 			<ee:transform doc:name="check availability, calculate subtotal, taxPrice, set listPartners, shippingPrice" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -57,7 +57,7 @@ if (vars.listPartners != []) (vars.shippingPrice + (vars.listPartners reduce ((i
 				</ee:transform>
 	</flow>
 	<flow name="reserveOrderItems" doc:id="c4fb2a20-aae1-4706-b1c4-40853a5d6d41" >
-		<retail-salesforce-customer-system-api:get-customer-by-customer-id doc:name="Get customer by customer id" doc:id="8efdc843-798e-47a8-b9ab-c470fa15f56b" target="customerData" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.inputOrder.customerId]"/>
+		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Get customer by customer id" doc:id="8efdc843-798e-47a8-b9ab-c470fa15f56b" target="customerData" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.inputOrder.customerId]"/>
 		<foreach doc:name="For Each" doc:id="10142829-99dd-452b-84c5-0059b298ddc0" collection="#[vars.inputOrder.orderItems]">
 			<choice doc:name="Is order placed from Partner?" doc:id="6f5fbf50-245c-48ee-8da1-7e364c5f3662" >
 				<when expression='#[payload.location.locationType == "PARTNER"]'>
@@ -154,7 +154,7 @@ output application/json
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="7d145756-5b78-4890-9dd6-f3333d2e7cf1" message="#[payload]"/>
-		<retail-orders-system-api:create-customer-by-customer-id doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[ vars.inputOrder.customerId ]" target="order"/>
+		<retail-orders-system-api:create-new-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[ vars.inputOrder.customerId ]" target="order"/>
 	</flow>
 	<flow name="processPayment" doc:id="b4066cc0-b9c3-4409-9e23-4285b9d29c3c" >
 		<ee:transform doc:name="prepare payment request" doc:id="185beac3-493e-47da-8feb-d89d175509ef" >
@@ -183,8 +183,8 @@ output application/json
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="ac339500-e7bb-436a-ada2-941458a814de" message="#[output application/json --- payload]" />
-		<retail-payment-process-api:create-process-payment doc:name="Create process payment" doc:id="3a3d90c1-8902-4bde-a92f-80d946a0963a" config-ref="Retail_Payment_Process_API_Config">
-		</retail-payment-process-api:create-process-payment>
+		<retail-payment-process-api:process-payment doc:name="Create process payment" doc:id="3a3d90c1-8902-4bde-a92f-80d946a0963a" config-ref="Retail_Payment_Process_API_Config">
+		</retail-payment-process-api:process-payment>
 	</flow>
 	<flow name="updateOrderStatus" doc:id="5354c639-67c2-4caa-ab6c-890cbac4e4b1" >
 		<ee:transform doc:name="Update status to Processing" doc:id="19d30635-51ef-465a-a177-c585f0d4ee1e" >
@@ -197,7 +197,7 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<retail-orders-system-api:update-statuses-by-order-id doc:name="Update statuses by order id" doc:id="9e5948a8-f305-4e5b-a2f4-41a5803dc5b0" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.order.identifier]"/>
+		<retail-orders-system-api:update-order-status doc:name="Update statuses by order id" doc:id="9e5948a8-f305-4e5b-a2f4-41a5803dc5b0" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.order.identifier]"/>
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
 		<ee:transform doc:name="Prepare email request" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
@@ -249,6 +249,6 @@ MuleSoft Team"
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="ee0d5975-bfa4-4236-9306-8f513320cce8" message="#[payload]"/>
-		<retail-notifications-system-api:create-notification doc:name="Send e-mail notification" doc:id="ac103468-3795-44ee-a8a5-ffe6ebdfe4df" config-ref="Retail_Notifications_System_API_Config"/>
+		<retail-notifications-system-api:create-new-notification doc:name="Send e-mail notification" doc:id="ac103468-3795-44ee-a8a5-ffe6ebdfe4df" config-ref="Retail_Notifications_System_API_Config"/>
 	</flow>
 	</mule>

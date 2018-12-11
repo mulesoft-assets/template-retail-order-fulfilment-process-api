@@ -3,8 +3,8 @@ version: v2.0
 title: Retail Order Fulfilment Process API
 
 uses: 
-  order: /exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_order_types/1.0.21/retail_order_types.raml
-  common: /exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_common/1.0.8/retail_common.raml
+  order: /exchange_modules/org.mule.templates/retail-order-types/1.0.0/retail_order_types.raml
+  common: /exchange_modules/org.mule.templates/retail-common/1.0.0/retail_common.raml
 
 types:
   OrderRequest:
@@ -17,12 +17,17 @@ types:
   OrderResponse: 
     type: object
     properties:
-      status: string
+      status: 
+        type: string
+        description: status of order
       identifier: common.resourceId
-      message: string
+      message: 
+        type: string
+        description: information about order
         
 /orders:
   post:
+    displayName: Create order
     body: 
       application/json: 
         type: OrderRequest

@@ -162,7 +162,8 @@ output application/json
 		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData"/>
 		<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]"/>
 		<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail"/>
-		<set-payload value="#[vars.updateOrderResponse]" doc:name="Status update response" doc:id="62319e3d-86ff-469b-9fdf-11f88e2540b3" />
+		<flow-ref doc:name="Send sms notification" doc:id="a9202ff0-abc7-4550-9c11-308946976106" name="sendNotificationSMS"/>
+        <set-payload value="#[vars.updateOrderResponse]" doc:name="Status update response" doc:id="62319e3d-86ff-469b-9fdf-11f88e2540b3" />
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
 		<ee:transform doc:name="Prepare email request" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
@@ -216,4 +217,27 @@ MuleSoft Team"
 		<retail-notifications-system-api:create-new-notification doc:name="Send e-mail notification" doc:id="ac103468-3795-44ee-a8a5-ffe6ebdfe4df" config-ref="Retail_Notifications_System_API_Config" target="sendEmailResponse"/>
 		<logger level="INFO" doc:name="Log call response" doc:id="6c777fd2-582d-4be9-ba5e-4442803fe538" message="vars.sendEmailResponse=#[output application/json --- vars.sendEmailResponse]" />
 	</flow>
+    <flow name="sendNotificationSMS" doc:id="a9a39185-767d-4449-a52a-0e721465b495" >
+        <ee:transform doc:name="Prepare email request" doc:id="7ad474e0-e1f5-4a68-b040-84094314df53" >
+            <ee:message >
+                <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var pickupItems = vars.orderData.orderItems.pickupItems filter $.location.locationType == "STORE"
+var warehouseItems = vars.orderData.orderItems.shipmentItems filter $.location.locationType == "WAREHOUSE"
+var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.locationType == "PARTNER"
+---
+{
+    "type": "SMS",
+    priority: "MINOR",
+    recipient: p('recipient.phone.number'),
+    subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
+    message: "Hello, Your order has been placed. "
+++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.totalTax as Number + vars.orderData.shippingCost as Number)*100)/100) as String ++ " USD"
+++ "We will inform you about future updates. MuleSoft Team"  
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<retail-notifications-system-api:create-new-notification doc:name="Send sms notification" doc:id="586379d0-c590-47db-8275-a2cdc7f1ee05" config-ref="Retail_Notifications_System_API_Config" target="sendSmsResponse"/>
+        <logger level="INFO" doc:name="Log call response" doc:id="deb832fa-c5c6-4cdd-a2a6-61f756e98a4b" message="vars.sendSmsResponse=#[output application/json --- vars.sendSmsResponse]" />
+    </flow>
 	</mule>

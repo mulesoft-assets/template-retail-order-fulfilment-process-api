@@ -162,7 +162,14 @@ output application/json
 		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData"/>
 		<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]"/>
 		<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail"/>
-		<flow-ref doc:name="Send sms notification" doc:id="a9202ff0-abc7-4550-9c11-308946976106" name="sendNotificationSMS"/>
+		<choice doc:name="Choice" doc:id="74dd524b-7cb1-47c9-a37d-06c4cd5243e0" >
+			<when expression="#[p('send.sms') == 'yes']">
+				<flow-ref doc:name="Send sms notification" doc:id="a9202ff0-abc7-4550-9c11-308946976106" name="sendNotificationSMS" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="05464529-f62e-4c0a-a3c5-1ea55129d6c5" message="SMS notification is off"/>
+			</otherwise>
+		</choice>
         <set-payload value="#[vars.updateOrderResponse]" doc:name="Status update response" doc:id="62319e3d-86ff-469b-9fdf-11f88e2540b3" />
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
@@ -232,7 +239,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
     recipient: p('recipient.phone.number'),
     subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
     message: "Hello, Your order has been placed. "
-++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.totalTax as Number + vars.orderData.shippingCost as Number)*100)/100) as String ++ " USD"
+++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.totalTax as Number + vars.orderData.shippingCost as Number)*100)/100) as String ++ " USD. "
 ++ "We will inform you about future updates. MuleSoft Team"  
 }]]></ee:set-payload>
             </ee:message>

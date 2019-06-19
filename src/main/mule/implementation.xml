@@ -85,7 +85,6 @@ var postalAddress = vars.customerData.deliveryAddresses filter ($.'type' == "SHI
 }]]></ee:set-payload>
 						</ee:message>
 					</ee:transform>
-					<logger level="INFO" doc:name="Logger" doc:id="cc14c58f-ef2c-4473-b218-300970e06505" message="#[payload]"/>
 					<retail-partners-system-api:create-reservation doc:name="Create reservation" doc:id="904f5fb3-28b1-451a-b724-e72f481ba3b1" config-ref="Retail_Partners_System_API_Config"/>
 				</when>
 				<otherwise >
@@ -153,68 +152,34 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="7d145756-5b78-4890-9dd6-f3333d2e7cf1" message="#[payload]"/>
-		<retail-orders-system-api:create-new-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[ vars.inputOrder.customerId ]" target="order"/>
+		<retail-orders-system-api:create-new-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[vars.inputOrder.customerId]" target="order"/>
 	</flow>
-	<flow name="processPayment" doc:id="b4066cc0-b9c3-4409-9e23-4285b9d29c3c" >
-		<ee:transform doc:name="prepare payment request" doc:id="185beac3-493e-47da-8feb-d89d175509ef" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-  price: {
-    amount: {
-      currency: "USD",
-      currencyValue: payload.total,
-      name: "Amount"
-    },
-    salesUnit: {
-      code: "EA",
-      name: "Each"
-    }
-  },
-  customer: {
-    paymentMethod: "BANK",
-    orderId: vars.order.identifier,
-    customerId: vars.inputOrder.customerId
-  }
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="ac339500-e7bb-436a-ada2-941458a814de" message="#[output application/json --- payload]" />
-		<retail-payment-process-api:process-payment doc:name="Create process payment" doc:id="3a3d90c1-8902-4bde-a92f-80d946a0963a" config-ref="Retail_Payment_Process_API_Config">
-		</retail-payment-process-api:process-payment>
-	</flow>
-	<flow name="updateOrderStatus" doc:id="5354c639-67c2-4caa-ab6c-890cbac4e4b1" >
-		<ee:transform doc:name="Update status to Processing" doc:id="19d30635-51ef-465a-a177-c585f0d4ee1e" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-	status: "Processing"
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<retail-orders-system-api:update-order-status doc:name="Update statuses by order id" doc:id="9e5948a8-f305-4e5b-a2f4-41a5803dc5b0" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.order.identifier]"/>
+	<flow name="updateOrder" doc:id="e32ea376-4879-4574-ab5a-8333d659442a" >
+		<retail-orders-system-api:update-order-status doc:name="Update order status" doc:id="fdd0db38-095e-4d82-a4c9-2a616ef2d13e" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.salesOrderId]" target="updateOrderResponse"/>
+		<logger level="INFO" doc:name="Log call response" doc:id="e22bdeca-e3e6-4578-92b2-9248ae0feed7" message="vars.updateOrderResponse=#[output application/json --- vars.updateOrderResponse]"/>
+		<retail-orders-system-api:retrieve-customer-order doc:name="Retrieve customer order" doc:id="a7ac4eca-f152-48ca-b04d-3b9ed0566089" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.salesOrderId]" target="orderData"/>
+		<logger level="INFO" doc:name="Log call response" doc:id="51ed63ff-b555-4390-b129-d91a840ebb80" message="vars.orderData=#[output application/json --- vars.orderData]"/>
+		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData"/>
+		<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]"/>
+		<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail"/>
+		<set-payload value="#[vars.updateOrderResponse]" doc:name="Status update response" doc:id="62319e3d-86ff-469b-9fdf-11f88e2540b3" />
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
 		<ee:transform doc:name="Prepare email request" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
-var pickupItems = vars.inputOrder.orderItems filter $.location.locationType == "STORE"
-var warehouseItems = vars.inputOrder.orderItems filter $.location.locationType == "WAREHOUSE"
-var partnerItems = vars.inputOrder.orderItems filter $.location.locationType == "PARTNER"
+var pickupItems = vars.orderData.orderItems.pickupItems filter $.location.locationType == "STORE"
+var warehouseItems = vars.orderData.orderItems.shipmentItems filter $.location.locationType == "WAREHOUSE"
+var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.locationType == "PARTNER"
 ---
 {
     "type": "EMAIL",
     priority: "MINOR",
     recipient: vars.customerData.emailAddress,
-    subject: "Order - $(vars.order.identifier) | Anypoint Store",
+    subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
     message: "Hello, 
-    Your order [ $(vars.order.identifier) ] has been placed.\n\n"
+    Your order [ $(vars.orderData.identifier) ] has been placed.\n\n"
 ++ (if (pickupItems !=null) ("Items to be picked up in store: \n\n" ++
 (pickupItems map (
   		"Product Name:" ++ $.productName ++ "\n"
@@ -239,7 +204,7 @@ var partnerItems = vars.inputOrder.orderItems filter $.location.locationType == 
 	) joinBy "\n")
 	++ "-----------------------------\n\n"
 ) else '')
-++ "Total price: " ++ ((round (vars.subtotal + vars.taxPrice + vars.shippingPrice)*100)/100) as String ++ " USD\n\n"
+++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.totalTax as Number + vars.orderData.shippingCost as Number)*100)/100) as String ++ " USD\n\n"
 ++ "We will inform you about future updates.
 
 Thanks,
@@ -248,7 +213,7 @@ MuleSoft Team"
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="ee0d5975-bfa4-4236-9306-8f513320cce8" message="#[payload]"/>
-		<retail-notifications-system-api:create-new-notification doc:name="Send e-mail notification" doc:id="ac103468-3795-44ee-a8a5-ffe6ebdfe4df" config-ref="Retail_Notifications_System_API_Config"/>
+		<retail-notifications-system-api:create-new-notification doc:name="Send e-mail notification" doc:id="ac103468-3795-44ee-a8a5-ffe6ebdfe4df" config-ref="Retail_Notifications_System_API_Config" target="sendEmailResponse"/>
+		<logger level="INFO" doc:name="Log call response" doc:id="6c777fd2-582d-4be9-ba5e-4442803fe538" message="vars.sendEmailResponse=#[output application/json --- vars.sendEmailResponse]" />
 	</flow>
 	</mule>

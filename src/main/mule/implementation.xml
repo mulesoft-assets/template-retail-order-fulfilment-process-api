@@ -155,22 +155,74 @@ output application/json
 		<retail-orders-system-api:create-new-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[vars.inputOrder.customerId]" target="order"/>
 	</flow>
 	<flow name="updateOrder" doc:id="e32ea376-4879-4574-ab5a-8333d659442a" >
-		<retail-orders-system-api:update-order-status doc:name="Update order status" doc:id="fdd0db38-095e-4d82-a4c9-2a616ef2d13e" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.salesOrderId]" target="updateOrderResponse"/>
-		<logger level="INFO" doc:name="Log call response" doc:id="e22bdeca-e3e6-4578-92b2-9248ae0feed7" message="vars.updateOrderResponse=#[output application/json --- vars.updateOrderResponse]"/>
-		<retail-orders-system-api:retrieve-customer-order doc:name="Retrieve customer order" doc:id="a7ac4eca-f152-48ca-b04d-3b9ed0566089" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.salesOrderId]" target="orderData"/>
-		<logger level="INFO" doc:name="Log call response" doc:id="51ed63ff-b555-4390-b129-d91a840ebb80" message="vars.orderData=#[output application/json --- vars.orderData]"/>
-		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData"/>
-		<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]"/>
-		<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail"/>
-		<choice doc:name="Choice" doc:id="74dd524b-7cb1-47c9-a37d-06c4cd5243e0" >
-			<when expression="#[p('send.sms') == 'yes']">
+		<ee:transform doc:name="Store salesOrderId" doc:id="0738a75e-e676-4326-b3f9-363d98e3b955" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="salesOrderId" ><![CDATA[attributes.uriParams.salesOrderId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<retail-payment-process-api:check-payment-status doc:name="Check payment status" doc:id="9e6d357a-b87b-4304-b8d3-6848a29c0b2c" payment-order-id="#[vars.salesOrderId]" target="checkPaymentResponse" config-ref="Retail_Payment_Process_API_Config"/>
+		<logger level="INFO" doc:name="Log call response" doc:id="5b6feb41-111f-4167-93c8-4ba012a96534" message="vars.checkPaymentResponse=#[output application/json --- vars.checkPaymentResponse]"/>
+		<choice doc:name="Check that payment is approved" doc:id="d274528c-f912-4bb9-b075-be23ccfa313e" >
+			<when expression='#[vars.checkPaymentResponse.status == "APPROVED"]'>
+				<ee:transform doc:name="Prepare data to update order" doc:id="6beb4deb-9fad-4c2a-9d32-39e5f5517c61">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="updateOrderData" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "Processing"
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<retail-orders-system-api:update-order-status doc:name="Update order status" doc:id="fdd0db38-095e-4d82-a4c9-2a616ef2d13e" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.checkPaymentResponse.identifier]" target="updateOrderResponse" >
+					<retail-orders-system-api:update-order-status-request-data ><![CDATA[#[vars.updateOrderData]]]></retail-orders-system-api:update-order-status-request-data>
+				</retail-orders-system-api:update-order-status>
+				<logger level="INFO" doc:name="Log call response" doc:id="e22bdeca-e3e6-4578-92b2-9248ae0feed7" message="vars.updateOrderResponse=#[output application/json --- vars.updateOrderResponse]" />
+				<retail-orders-system-api:retrieve-customer-order doc:name="Retrieve customer order" doc:id="a7ac4eca-f152-48ca-b04d-3b9ed0566089" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.checkPaymentResponse.identifier]" target="orderData" />
+				<logger level="INFO" doc:name="Log call response" doc:id="51ed63ff-b555-4390-b129-d91a840ebb80" message="vars.orderData=#[output application/json --- vars.orderData]" />
+				<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData" />
+				<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]" />
+				<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail" />
+				<choice doc:name="Choice" doc:id="74dd524b-7cb1-47c9-a37d-06c4cd5243e0">
+			<when expression="#[p('send.sms') == 'true' and not isEmpty(vars.customerData.phone)]">
 				<flow-ref doc:name="Send sms notification" doc:id="a9202ff0-abc7-4550-9c11-308946976106" name="sendNotificationSMS" />
 			</when>
-			<otherwise >
-				<logger level="INFO" doc:name="Logger" doc:id="05464529-f62e-4c0a-a3c5-1ea55129d6c5" message="SMS notification is off"/>
+			<otherwise>
+				<logger level="INFO" doc:name="Log not sending SMS" doc:id="05464529-f62e-4c0a-a3c5-1ea55129d6c5" message="SMS notification is off" />
 			</otherwise>
 		</choice>
-        <set-payload value="#[vars.updateOrderResponse]" doc:name="Status update response" doc:id="62319e3d-86ff-469b-9fdf-11f88e2540b3" />
+				<ee:transform doc:name="Prepare response" doc:id="d476f8ef-eec5-4e60-94f1-f98290f6b122">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"identifier": vars.checkPaymentResponse.identifier,
+	"status": vars.orderData.status,
+	"paymentMethodType" : vars.checkPaymentResponse.paymentMethod
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Prepare response" doc:id="e700e475-ad16-4e64-ae15-cbd14483df6f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"identifier": vars.checkPaymentResponse.identifier,
+	"status": "DRAFT",
+	"paymentMethodType" : vars.checkPaymentResponse.paymentMethod
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="sendNotificationEmail" doc:id="4cd2552f-dd72-4dd5-99eb-ff42e86fe494" >
 		<ee:transform doc:name="Prepare email request" doc:id="2c6abf33-8ab0-43f3-bcbf-03e71e67f63c" >
@@ -225,7 +277,7 @@ MuleSoft Team"
 		<logger level="INFO" doc:name="Log call response" doc:id="6c777fd2-582d-4be9-ba5e-4442803fe538" message="vars.sendEmailResponse=#[output application/json --- vars.sendEmailResponse]" />
 	</flow>
     <flow name="sendNotificationSMS" doc:id="a9a39185-767d-4449-a52a-0e721465b495" >
-        <ee:transform doc:name="Prepare email request" doc:id="7ad474e0-e1f5-4a68-b040-84094314df53" >
+        <ee:transform doc:name="Prepare SMS request" doc:id="7ad474e0-e1f5-4a68-b040-84094314df53" >
             <ee:message >
                 <ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -236,7 +288,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
 {
     "type": "SMS",
     priority: "MINOR",
-    recipient: p('recipient.phone.number'),
+    recipient: vars.customerData.phone,
     subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
     message: "Hello, Your order has been placed. "
 ++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.totalTax as Number + vars.orderData.shippingCost as Number)*100)/100) as String ++ " USD. "

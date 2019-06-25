@@ -180,11 +180,14 @@ output application/json
         </choice>
     </flow>
     <flow name="put:\orders\(salesOrderId):application\json:retail_order_fulfilment_process_api-config">
-        <ee:transform doc:id="102b7e0c-2ef0-4363-bce6-0328e61a09ae" doc:name="Store salesOrderId">
+        <flow-ref doc:name="updateOrder" doc:id="1db3ff1b-ca1a-499a-a5bd-c15aaf113816" name="updateOrder" />
+    </flow>
+    <flow name="put:\orders\(salesOrderId):retail_order_fulfilment_process_api-config">
+        <ee:transform>
             <ee:variables>
-                <ee:set-variable variableName="salesOrderId"><![CDATA[attributes.uriParams.salesOrderId]]></ee:set-variable>
+                <ee:set-variable variableName="salesOrderId">attributes.uriParams.salesOrderId</ee:set-variable>
             </ee:variables>
         </ee:transform>
-		<flow-ref doc:name="updateOrder" doc:id="1db3ff1b-ca1a-499a-a5bd-c15aaf113816" name="updateOrder"/>
+        <logger level="INFO" message="put:\orders\(salesOrderId):retail_order_fulfilment_process_api-config" />
     </flow>
 </mule>

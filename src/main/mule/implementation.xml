@@ -115,10 +115,10 @@ output application/json
 output application/json
 ---
 {
-	subtotal: (round(vars.subtotal*100)/100) as String,
-	taxPrice: (round(vars.taxPrice*100)/100) as String,
-	shippingPrice: (round (vars.shippingPrice*100)/100) as String,
-	total: (round ((vars.subtotal + vars.taxPrice + vars.shippingPrice)*100)/100) as String,
+	subtotal: vars.subtotal as String { format : "0.00" },
+	taxPrice: vars.taxPrice as String { format : "0.00" },
+	shippingPrice: vars.shippingPrice as String { format : "0.00" },
+	total: (vars.subtotal + vars.taxPrice + vars.shippingPrice) as String { format : "0.00" },
 	status: "Draft",
 	orderItems: {
 	  pickupItems : (vars.inputOrder.orderItems filter $.location.locationType == "STORE") 

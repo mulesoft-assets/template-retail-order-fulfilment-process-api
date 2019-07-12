@@ -264,7 +264,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
 	) joinBy "\n")
 	++ "-----------------------------\n\n"
 ) else '')
-++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number)*100)/100) as String ++ " USD\n\n"
+++ "Total price: " ++ (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number) as String ++ " USD\n\n"
 ++ "We will inform you about future updates.
 
 Thanks,
@@ -291,7 +291,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
     recipient: vars.customerData.phone,
     subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
     message: "Hello, Your order has been placed. "
-++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number)*100)/100) as String ++ " USD. "
+++ "Total price: " ++ (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number) as String ++ " USD. "
 ++ "We will inform you about future updates. MuleSoft Team"  
 }]]></ee:set-payload>
             </ee:message>

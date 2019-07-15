@@ -115,10 +115,10 @@ output application/json
 output application/json
 ---
 {
-	subtotal: (round(vars.subtotal*100)/100) as String,
-	taxPrice: (round(vars.taxPrice*100)/100) as String,
-	shippingPrice: (round (vars.shippingPrice*100)/100) as String,
-	total: (round ((vars.subtotal + vars.taxPrice + vars.shippingPrice)*100)/100) as String,
+	subtotal: vars.subtotal as String { format : "0.00" },
+	taxPrice: vars.taxPrice as String { format : "0.00" },
+	shippingPrice: vars.shippingPrice as String { format : "0.00" },
+	total: (vars.subtotal + vars.taxPrice + vars.shippingPrice) as String { format : "0.00" },
 	status: "Draft",
 	orderItems: {
 	  pickupItems : (vars.inputOrder.orderItems filter $.location.locationType == "STORE") 
@@ -264,7 +264,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
 	) joinBy "\n")
 	++ "-----------------------------\n\n"
 ) else '')
-++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number)*100)/100) as String ++ " USD\n\n"
+++ "Total price: " ++ (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number) as String { format : "0.00" } ++ " USD\n\n"
 ++ "We will inform you about future updates.
 
 Thanks,
@@ -291,7 +291,7 @@ var partnerItems = vars.orderData.orderItems.partnersItems filter $.location.loc
     recipient: vars.customerData.phone,
     subject: "Order - $(vars.orderData.identifier) | Anypoint Store",
     message: "Hello, Your order has been placed. "
-++ "Total price: " ++ ((round (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number)*100)/100) as String ++ " USD. "
+++ "Total price: " ++ (vars.orderData.subtotal as Number + vars.orderData.taxPrice as Number + vars.orderData.shippingPrice as Number) as String { format : "0.00" } ++ " USD. "
 ++ "We will inform you about future updates. MuleSoft Team"  
 }]]></ee:set-payload>
             </ee:message>

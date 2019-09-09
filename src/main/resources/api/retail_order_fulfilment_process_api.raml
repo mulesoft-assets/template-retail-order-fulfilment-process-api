@@ -4,16 +4,16 @@ title: Retail Order Fulfilment Process API
 baseUri: http://localhost:8081/api
 
 uses: 
-  order: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_order_types/1.0.22/retail_order_types.raml
-  common: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_common/1.0.8/retail_common.raml
-  payment: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_payment/1.0.9/retail_payment.raml
+  order: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_order_types/1.0.23/retail_order_types.raml
+  common: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_common/1.0.10/retail_common.raml
+  payment: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_payment/1.0.10/retail_payment.raml
 
 types:
   OrderRequest:
     type: object
     properties:
       status: order.Status
-      customerId: common.resourceId
+      customerId: common.ResourceId
       orderItems: order.OrderItemSummary[]
 
   OrderResponse: 
@@ -22,7 +22,7 @@ types:
       status: 
         type: string
         description: status of order
-      identifier: common.resourceId
+      identifier: common.ResourceId
       message: 
         type: string
         description: information about order
@@ -33,13 +33,13 @@ types:
     body: 
       application/json: 
         type: OrderRequest
-        examples: !include examples/orders-request.raml
+        example: !include examples/orders-request.json
     responses:
       201: 
         body: 
           application/json:
             type: OrderResponse 
-            examples: !include examples/orders-response.raml
+            example: !include examples/orders-response.json
   /{salesOrderId}:
     put:
       displayName: Updates order
@@ -48,4 +48,4 @@ types:
           body:
             application/json: 
               type: payment.PaymentResponse
-              examples: !include examples/update-order-response.raml
+              example: !include examples/update-order-response.json

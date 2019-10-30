@@ -2,16 +2,16 @@
 usage: |
   data types specific to omnichannel api and orders system api
 uses:
-  common: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_common/1.0.10/retail_common.raml
-  product: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_product/1.0.10/retail_product.raml
-  fulfillment: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_fulfillment/1.0.6/retail_fulfillment.raml
+  common: /exchange_modules/org.mule.templates/retail-common/1.0.1/retail_common.raml
+  product: /exchange_modules/org.mule.templates/retail-product/1.0.1/retail_product.raml
+  fulfillment: /exchange_modules/org.mule.templates/retail-fulfillment/1.0.2/retail_fulfillment.raml
   
 types:
 
   SalesOrderItem:
     type: object
     description: |
-      an individual component of an order
+      An individual component of an order
     properties:
       identifier?: common.ResourceId
       quantity:
@@ -60,18 +60,19 @@ types:
       billingAddress?:
         type: common.PostalAddress | nil
         description: |
-          full billing address
+          Full billing address
       shippingAddress?:
         type: common.PostalAddress | nil
         description: |
-          full address for shipping of products
+          Full address for shipping of products
       orderItems?:
         type: OrderItemsSummary
         description: |
           Lists of ordered products
       trackingNumber?:
         type: string
-        description: Order tracking number
+        description: |
+          Order tracking number
       status?:
         type: Status
         description: |
@@ -79,7 +80,7 @@ types:
       subtotal?:
         type: string
         description: |
-          price for order (without tax and shipping)
+          Price for order (without tax and shipping)
       taxPrice?:
         type: string
         description: Product tax
@@ -89,7 +90,7 @@ types:
       total?:
         type: string
         description: |
-          total price for order (with tax and shipping)
+          Total price for order (with tax and shipping)
 
 
   OrderItemSummary:

@@ -4,9 +4,9 @@ title: Retail Order Fulfilment Process API
 baseUri: http://localhost:8081/api
 
 uses: 
-  order: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_order_types/1.0.23/retail_order_types.raml
-  common: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_common/1.0.10/retail_common.raml
-  payment: exchange_modules/47f07e0a-f578-47d4-9591-d9e7afffb0fc.retail/retail_payment/1.0.10/retail_payment.raml
+  order: /exchange_modules/org.mule.templates/retail-order-types/1.0.2/retail_order_types.raml
+  common: /exchange_modules/org.mule.templates/retail-common/1.0.1/retail_common.raml
+  payment: /exchange_modules/org.mule.templates/retail-payment/1.0.2/retail_payment.raml
 
 types:
   OrderRequest:
@@ -21,11 +21,11 @@ types:
     properties:
       status: 
         type: string
-        description: status of order
+        description: Status of order
       identifier: common.ResourceId
       message: 
         type: string
-        description: information about order
+        description: Information about order
        
 /orders:
   post:
@@ -33,19 +33,19 @@ types:
     body: 
       application/json: 
         type: OrderRequest
-        example: !include examples/orders-request.json
+        example: !include examples/orders-request.yaml
     responses:
       201: 
         body: 
           application/json:
             type: OrderResponse 
-            example: !include examples/orders-response.json
+            example: !include examples/orders-response.yaml
   /{salesOrderId}:
     put:
-      displayName: Updates order
+      displayName: Update order
       responses:
         200:
           body:
             application/json: 
               type: payment.PaymentResponse
-              example: !include examples/update-order-response.json
+              example: !include examples/update-order-response.yaml

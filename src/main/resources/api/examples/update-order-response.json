@@ -1,9 +1,0 @@
-{
-  "status": "created",
-  "identifier": "123456789",
-  "paymentMethod": {
-    "medium": "CARD",
-    "issuer": "BANK",
-    "name": "VISA"
-  }  
-}

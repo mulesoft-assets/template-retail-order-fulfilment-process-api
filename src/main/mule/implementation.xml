@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:retail-notifications-system-api="http://www.mulesoft.org/schema/mule/retail-notifications-system-api" xmlns:retail-payment-process-api="http://www.mulesoft.org/schema/mule/retail-payment-process-api"
-	xmlns:retail-partners-system-api="http://www.mulesoft.org/schema/mule/retail-partners-system-api"
-	xmlns:retail-salesforce-customer-system-api="http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api" xmlns:retail-orders-system-api="http://www.mulesoft.org/schema/mule/retail-orders-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:retail-product-availability-process-api="http://www.mulesoft.org/schema/mule/retail-product-availability-process-api" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:retail-customer-system-api="http://www.mulesoft.org/schema/mule/retail-customer-system-api" xmlns:retail-notifications-system-api="http://www.mulesoft.org/schema/mule/retail-notifications-system-api"
+	xmlns:retail-payment-process-api="http://www.mulesoft.org/schema/mule/retail-payment-process-api"
+	xmlns:retail-partners-system-api="http://www.mulesoft.org/schema/mule/retail-partners-system-api" xmlns:retail-orders-system-api="http://www.mulesoft.org/schema/mule/retail-orders-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:retail-product-availability-process-api="http://www.mulesoft.org/schema/mule/retail-product-availability-process-api" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/retail-product-availability-process-api http://www.mulesoft.org/schema/mule/retail-product-availability-process-api/current/mule-retail-product-availability-process-api.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/retail-orders-system-api http://www.mulesoft.org/schema/mule/retail-orders-system-api/current/mule-retail-orders-system-api.xsd
-http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api http://www.mulesoft.org/schema/mule/retail-salesforce-customer-system-api/current/mule-retail-salesforce-customer-system-api.xsd
 http://www.mulesoft.org/schema/mule/retail-partners-system-api http://www.mulesoft.org/schema/mule/retail-partners-system-api/current/mule-retail-partners-system-api.xsd
 http://www.mulesoft.org/schema/mule/retail-payment-process-api http://www.mulesoft.org/schema/mule/retail-payment-process-api/current/mule-retail-payment-process-api.xsd
-http://www.mulesoft.org/schema/mule/retail-notifications-system-api http://www.mulesoft.org/schema/mule/retail-notifications-system-api/current/mule-retail-notifications-system-api.xsd">
+http://www.mulesoft.org/schema/mule/retail-notifications-system-api http://www.mulesoft.org/schema/mule/retail-notifications-system-api/current/mule-retail-notifications-system-api.xsd
+http://www.mulesoft.org/schema/mule/retail-customer-system-api http://www.mulesoft.org/schema/mule/retail-customer-system-api/current/mule-retail-customer-system-api.xsd">
 
 <flow name="checkAvailability" doc:id="3e36bf92-b10d-4ede-9f91-0d883c94038c" >
 		<foreach doc:name="For Each OrderItem" doc:id="2e9cb2eb-4055-495d-be36-7729ee26e503" collection="#[vars.inputOrder.orderItems]">
 			<set-variable value="#[payload]" doc:name="Set Variable currentItem" doc:id="d59fc4a4-2ec0-454d-957f-2f41668b4067" variableName="currentItem"/>
-			<retail-product-availability-process-api:retrieve-availability-for-location doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
+			<retail-product-availability-process-api:get-availability-for-location doc:name="Get availabilities by location id" doc:id="c1d1884f-63f0-4404-af93-2dd79dfbd948" config-ref="Retail_Product_Availability_Process_API_Config" location-type="#[payload.location.locationType]" product-id="#[payload.productId]" variant-id="#[payload.orderItemId]" location-id="#[payload.location.locationId]" price="#[payload.price]" quantity="#[payload.quantity]"/>
 			<ee:transform doc:name="check availability, calculate subtotal, taxPrice, set listPartners, shippingPrice" doc:id="6cb79c4e-3fec-4561-bf22-c3b383c9559d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -57,7 +57,7 @@ if (vars.listPartners != []) (vars.shippingPrice + (vars.listPartners reduce ((i
 				</ee:transform>
 	</flow>
 	<flow name="reserveOrderItems" doc:id="c4fb2a20-aae1-4706-b1c4-40853a5d6d41" >
-		<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Get customer by customer id" doc:id="8efdc843-798e-47a8-b9ab-c470fa15f56b" target="customerData" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.inputOrder.customerId]"/>
+		<retail-customer-system-api:get-customers doc:name="Get customer by customer id" doc:id="8efdc843-798e-47a8-b9ab-c470fa15f56b" target="customerData" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.inputOrder.customerId]"/>
 		<foreach doc:name="For Each" doc:id="10142829-99dd-452b-84c5-0059b298ddc0" collection="#[vars.inputOrder.orderItems]">
 			<choice doc:name="Is order placed from Partner?" doc:id="6f5fbf50-245c-48ee-8da1-7e364c5f3662" >
 				<when expression='#[payload.location.locationType == "PARTNER"]'>
@@ -152,7 +152,7 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<retail-orders-system-api:create-new-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[vars.inputOrder.customerId]" target="order"/>
+		<retail-orders-system-api:create-order doc:name="Create Order by customer id" doc:id="54e60d28-d0f5-4ea8-8c15-b52399105eed" config-ref="Retail_Orders_System_API_Config" customer-id="#[vars.inputOrder.customerId]" target="order"/>
 	</flow>
 	<flow name="updateOrder" doc:id="e32ea376-4879-4574-ab5a-8333d659442a" >
 		<ee:transform doc:name="Store salesOrderId" doc:id="0738a75e-e676-4326-b3f9-363d98e3b955" >
@@ -162,7 +162,7 @@ output application/json
 				<ee:set-variable variableName="salesOrderId" ><![CDATA[attributes.uriParams.salesOrderId]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<retail-payment-process-api:check-payment-status doc:name="Check payment status" doc:id="9e6d357a-b87b-4304-b8d3-6848a29c0b2c" payment-order-id="#[vars.salesOrderId]" target="checkPaymentResponse" config-ref="Retail_Payment_Process_API_Config"/>
+		<retail-payment-process-api:check-payment doc:name="Check payment status" doc:id="9e6d357a-b87b-4304-b8d3-6848a29c0b2c" payment-order-id="#[vars.salesOrderId]" target="checkPaymentResponse" config-ref="Retail_Payment_Process_API_Config"/>
 		<logger level="INFO" doc:name="Log call response" doc:id="5b6feb41-111f-4167-93c8-4ba012a96534" message="vars.checkPaymentResponse=#[output application/json --- vars.checkPaymentResponse]"/>
 		<choice doc:name="Check that payment is approved" doc:id="d274528c-f912-4bb9-b075-be23ccfa313e" >
 			<when expression='#[vars.checkPaymentResponse.status == "APPROVED"]'>
@@ -182,9 +182,9 @@ output application/json
 					<retail-orders-system-api:update-order-status-request-data ><![CDATA[#[vars.updateOrderData]]]></retail-orders-system-api:update-order-status-request-data>
 				</retail-orders-system-api:update-order-status>
 				<logger level="INFO" doc:name="Log call response" doc:id="e22bdeca-e3e6-4578-92b2-9248ae0feed7" message="vars.updateOrderResponse=#[output application/json --- vars.updateOrderResponse]" />
-				<retail-orders-system-api:retrieve-customer-order doc:name="Retrieve customer order" doc:id="a7ac4eca-f152-48ca-b04d-3b9ed0566089" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.checkPaymentResponse.identifier]" target="orderData" />
+				<retail-orders-system-api:get-order doc:name="Retrieve customer order" doc:id="a7ac4eca-f152-48ca-b04d-3b9ed0566089" config-ref="Retail_Orders_System_API_Config" order-id="#[vars.checkPaymentResponse.identifier]" target="orderData" />
 				<logger level="INFO" doc:name="Log call response" doc:id="51ed63ff-b555-4390-b129-d91a840ebb80" message="vars.orderData=#[output application/json --- vars.orderData]" />
-				<retail-salesforce-customer-system-api:retrieve-customer-contact doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData" />
+				<retail-customer-system-api:get-customers doc:name="Retrieve customer contact" doc:id="a0ae0506-e3ad-463b-8979-922cbc52adc5" config-ref="Retail_Salesforce_Customer_System_API_Config" customer-id="#[vars.orderData.customerId]" target="customerData" />
 				<logger level="INFO" doc:name="Log call response" doc:id="4a3cf4e2-ac0e-40fc-af2b-13d32ca8eff1" message="vars.customerData=#[output application/json --- vars.customerData]" />
 				<flow-ref doc:name="Send email notification" doc:id="2428385a-9d42-4105-b244-1a55642ff2db" name="sendNotificationEmail" />
 				<choice doc:name="Choice" doc:id="74dd524b-7cb1-47c9-a37d-06c4cd5243e0">
